@@ -1,7 +1,10 @@
 #include "RustMutex.hpp"
+#include <chrono>
 #include <iostream>
+#include <thread>
+#include <vector>
 
-struct ObjetoComum {
+struct SomeCommonStruct {
     int a;
     int b;
 
@@ -10,22 +13,22 @@ struct ObjetoComum {
         return *this;
     }
 
-    auto printA() const -> const ObjetoComum & {
+    auto printA() const -> const SomeCommonStruct & {
         std::cout << a << std::endl;
         return *this;
     }
 
-    auto printB() const -> const ObjetoComum & {
+    auto printB() const -> const SomeCommonStruct & {
         std::cout << b << std::endl;
         return *this;
     }
 
-    ObjetoComum(int inA, int inB) : a(inA), b(inB) {}
+    SomeCommonStruct(int inA, int inB) : a(inA), b(inB) {}
 };
 
 namespace {
 
-void fn(Mutex<ObjetoComum> &someObj) {
+void fn(Mutex<SomeCommonStruct> &someObj) {
     auto data = someObj.lock();
 
     data->printA();
@@ -36,8 +39,10 @@ void fn(Mutex<ObjetoComum> &someObj) {
     data->printA();
 }
 
-void fn2(const SharedMutex<ObjetoComum> &someObj) {
+void readData(const SharedMutex<SomeCommonStruct> &someObj) {
     auto data = someObj.lock_for_read();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     data->printA();
 
@@ -46,8 +51,10 @@ void fn2(const SharedMutex<ObjetoComum> &someObj) {
     data->printA();
 }
 
-void fn3(SharedMutex<ObjetoComum> &someObj) {
+void writeData(SharedMutex<SomeCommonStruct> &someObj) {
     auto data = someObj.lock_for_rw();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
     data->printA();
 
@@ -57,17 +64,27 @@ void fn3(SharedMutex<ObjetoComum> &someObj) {
     data->printA();
 
     *data += 1;
+
+    data->printA();
 }
 
 } // namespace
 
 int main() {
-    SharedMutex<ObjetoComum> someShared(1, 2);
-    Mutex<ObjetoComum> someObj(1, 2);
+    SharedMutex<SomeCommonStruct> someShared(1, 2);
+    Mutex<SomeCommonStruct> someObj(1, 2);
 
     fn(someObj);
 
-    fn2(someShared);
+    std::vector<std::thread> threads;
 
-    fn3(someShared);
+    for (int i = 0; i < 10; ++i) {
+        threads.emplace_back([&someShared]() { readData(someShared); });
+    }
+
+    threads.emplace_back([&someShared]() { writeData(someShared); });
+
+    for (auto &t : threads) {
+        t.join();
+    }
 }
