@@ -20,16 +20,6 @@ struct ObjetoComum {
         return *this;
     }
 
-    auto printA() -> ObjetoComum & {
-        const_cast<const ObjetoComum *>(this)->printA();
-        return *this;
-    }
-
-    auto printB() -> ObjetoComum & {
-        const_cast<const ObjetoComum *>(this)->printB();
-        return *this;
-    }
-
     ObjetoComum(int inA, int inB) : a(inA), b(inB) {}
 };
 
