@@ -178,7 +178,7 @@ template <class Obj, class MtxT = std::mutex> struct lckEnclosure {
         return {m, obj};
     }
 
-    auto lock_for_rw() -> enclosedLckGuard<Obj, MtxT, std::shared_lock<MtxT>> {
+    auto lock_for_rw() -> enclosedLckGuard<Obj, MtxT, std::unique_lock<MtxT>> {
         return {m, obj};
     }
 

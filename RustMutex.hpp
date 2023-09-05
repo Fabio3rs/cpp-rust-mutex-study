@@ -54,7 +54,7 @@ struct SharedMutex : protected Mutex<Obj, std::shared_mutex> {
     }
 
     auto lock_for_rw() -> ObjScopeGuard<Obj, std::shared_mutex,
-                                        std::shared_lock<std::shared_mutex>> {
+                                        std::unique_lock<std::shared_mutex>> {
         return {parentType::m, parentType::obj};
     }
 };
